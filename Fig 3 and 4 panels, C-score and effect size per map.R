@@ -120,5 +120,5 @@ plot((scale.vec.raw^2)/10000, effect.size, main="CASE STUDY NAME",
 lines(c(-1,5),c(2,2), col="red")
 
 
-out<-cbind(scale.vec.raw^2/10000, C.vec, C.vec.null, C.sd.null.vec) 
+out<-cbind(scale.vec.raw^2/10000, C.vec, C.vec.null, C.sd.null.vec, effect.size) 
 #write.csv(out, "DIRECTORY") 
