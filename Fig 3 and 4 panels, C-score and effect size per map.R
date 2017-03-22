@@ -4,7 +4,7 @@
 #Some ForestGeo data uses slightly different variable names, e.g. PX vs GX, or species vs latin. Some editing of the code may be necessary depending on the site data format. 
 
 graphics.off(); rm(list=ls(all=TRUE)); library(vegan)
-map <- read.table("U:\\Pudue Files\\Manuscripts\\Checkerboards\\Case Studies\\BCI\\Full.clean.BCI.map.txt",header=T,sep="\t",quote="")
+map <- read.csv("FILE LOCATION AND NAME")
 map<-map[which(map$Status != "dead"),]; map<-map[which(map$Stem != "multiple"),]
 
 i<-0; imax<-50
@@ -121,4 +121,4 @@ lines(c(-1,5),c(2,2), col="red")
 
 
 out<-cbind(scale.vec.raw^2/10000, C.vec, C.vec.null, C.sd.null.vec, effect.size) 
-#write.csv(out, "DIRECTORY") 
+#write.csv(out, "FILE LOCATION AND NAME") 
