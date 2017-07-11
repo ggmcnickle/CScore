@@ -5,7 +5,7 @@
 
 graphics.off(); rm(list=ls(all=TRUE)); library(vegan)
 map <- read.csv("FILE LOCATION AND NAME")
-map<-map[which(map$Status != "dead"),]; map<-map[which(map$Stem != "multiple"),]
+map<-map[which(map$Status != "dead"),]; map<-map[which(map$Stem != "multiple"),]; map<-map[which(map$Stem != "secondary"),]
 
 i<-0; imax<-50
 
