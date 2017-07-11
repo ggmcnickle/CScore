@@ -1,4 +1,4 @@
-#Stem map should use smithsonian forestGeo data format
+#Stem map should use smithsonian forestGeo data format 
 #Dead stems are removed because they do not contribute to richness
 #Multiple stems are removed so they are only counted once. 
 #Some ForestGeo data uses slightly different variable names, e.g. PX vs GX, or species vs latin. Some editing of the code may be necessary depending on the site data format. 
