@@ -1,6 +1,6 @@
 #Random community presence/absence matrix
 #Figure 1
-#McNickle and Lamb
+#McNickle and Lamb 
 #Generates random area based samples for Checkerboard score
 graphics.off(); rm(list=ls(all=TRUE))
 library(ggplot2); library(vegan); library(gridExtra)
