@@ -1,0 +1,118 @@
+#Random community presence/absence matrix
+#Figure 1
+#McNickle and Lamb et al.
+#Generates random area based samples for Checkerboard score
+graphics.off(); rm(list=ls(all=TRUE))
+library(ggplot2); library(vegan); library(gridExtra); 
+
+########################
+########################
+##  Parameters
+########################
+##  p = number of plots
+##  s = number of species
+##  a = area sampled (a from Kinsella was 0.1, 1 or 6 m^-2) 
+##  B = Species area curve constant
+##  z = species area curve exponent
+########################
+########################
+
+x<-10
+
+Num.C.Area<-function(p, B, z, a.max) 
+{
+	out<-as.numeric(); C.score<-as.numeric(); C.sd<-as.numeric(); a<-as.numeric(); S<-as.numeric(); 
+	effect.size.FF<-as.numeric(); C.score.null.FF<-as.numeric(); C.sd.null.FF<-as.numeric()
+	effect.size.FE<-as.numeric(); C.score.null.FE<-as.numeric(); C.sd.null.FE<-as.numeric()
+	for (i in 1:x) {
+		a[i]<-a.max/(x/i); S[i]<-B*a[i]^z
+		for (j in 1:p) 										#Loop 1 calculates Checkerboard scores
+			{											#Loop2 generates a p*s matrix where p are samples, and s are species
+			if (B*a[i]^z>=1) {temp.1 <- sample(1, B*a[i]^z, replace=TRUE)} else {temp.1 <- 0}								#Basic species area curve defines the size of the community
+			if (length(temp.1<B*a.max^z)) {temp.0 <- sample(0, B*a.max^z-sum(temp.1), replace=TRUE)} else {temp.0 <- as.numeric()}		#non-presences are zeros
+			temp   <- c(temp.1, temp.0)										#presences and absences combined	
+			data <- sample(temp, B*a.max^z, replace=FALSE)									#presences and absences shuffled randomly
+			out<-rbind(out, data)										#Bind new row to data set
+			}
+		C.score[i]<-mean(designdist(t(out), method="((A-J)*(B-J))"))/(p*(p-1)/2)	#Calculate mean Cij
+		C.sd[i]<-sd(designdist(t(out), method="((A-J)*(B-J))"))	#StDev of Cij
+
+			######
+			#NULL MODEL averaging
+			######
+				swaps<-1000
+				burn.thin<-30000
+				comm.matrix.null.FF <- permatswap(out, times = swaps, burnin = burn.thin, thin = burn.thin, mtype = "prab", shuffle="samp")
+				comm.matrix.null.FE <- permatswap(out, times = swaps, burnin = burn.thin, thin = burn.thin, mtype = "prab")
+
+				temp.FF<-as.numeric()
+				for (k in 1:swaps) 
+					{ temp.FF[k]<-mean(designdist(t(comm.matrix.null.FF$perm[[k]]), method="((A-J)*(B-J))"))/(p*(p-1)/2)}
+				C.score.null.FF[i]<-mean(as.numeric(temp.FF[-1]))
+				C.sd.null.FF[i]<-sd(as.numeric(temp.FF[-1]))
+				effect.size.FF[i]<-(C.score[i]-C.score.null.FF[i])/C.sd.null.FF[i]
+
+				temp.FE<-as.numeric()
+				for (k in 1:swaps) 
+					{ temp.FE[k]<-mean(designdist(t(comm.matrix.null.FE$perm[[k]]), method="((A-J)*(B-J))"))/(p*(p-1)/2)}
+				C.score.null.FE[i]<-mean(as.numeric(temp.FE[-1]))
+				C.sd.null.FE[i]<-sd(as.numeric(temp.FE[-1]))
+				effect.size.FE[i]<-(C.score[i]-C.score.null.FE[i])/C.sd.null.FF[i]
+
+			out<-as.numeric()										#reset for loop i
+		}
+out<-cbind(a,S, C.score, C.sd, effect.size.FF, effect.size.FE, C.score.null.FF, C.sd.null.FF, C.score.null.FE, C.sd.null.FE)
+out
+}
+
+z<-0.1; z1<-cbind(rep(z,x), Num.C.Area(50, 25, z, 100)) 
+z<-0.2; z2<-cbind(rep(z,x), Num.C.Area(50, 25, z, 100)) 
+z<-0.3; z3<-cbind(rep(z,x), Num.C.Area(50, 25, z, 100)) 
+z<-0.4; z4<-cbind(rep(z,x), Num.C.Area(50, 25, z, 100)) 
+z.panel<-data.frame(rbind(z1, z2, z3, z4)); colnames(z.panel)[1]<-"z"
+
+B<-10; B1<-cbind(rep(B,x), Num.C.Area(50, B, 0.25, 100)) 
+B<-20; B2<-cbind(rep(B,x), Num.C.Area(50, B, 0.25, 100)) 
+B<-30; B3<-cbind(rep(B,x), Num.C.Area(50, B, 0.25, 100)) 
+B<-40; B4<-cbind(rep(B,x), Num.C.Area(50, B, 0.25, 100)) 
+B.panel<-data.frame(rbind(B1, B2, B3, B4)); colnames(B.panel)[1]<-"B"
+
+#PLOT C-scores
+
+panel.1a<-ggplot(z.panel, aes(a, C.score, colour=as.factor(z)) ) + geom_line() +
+	labs(x="Sample unit scale", y="C-score") + theme_bw() + scale_colour_discrete(name="  z") 
+panel.1b<-ggplot(z.panel, aes(a, S, colour=as.factor(z)) ) + geom_line() +
+	labs(x="Sample unit scale", y="Species richness") + theme_bw() + scale_colour_discrete(name="  z") 
+
+
+panel.1c<-ggplot(B.panel, aes(a, C.score, colour=as.factor(B)) ) + geom_line() +
+	labs(x="Sample unit scale", y="C-score") + theme_bw() + scale_colour_discrete(name="  E") 
+panel.1d<-ggplot(B.panel, aes(a, S, colour=as.factor(B)) ) + geom_line() +
+	labs(x="Sample unit scale", y="Species richness") + theme_bw() + scale_colour_discrete(name="  F") 
+
+dev.new()
+grid.arrange(panel.1a, panel.1b, panel.1c, panel.1d,  ncol=2)
+
+#PLOT effect sizes
+
+panel.2a<-ggplot(z.panel, aes(a, (C.score-C.score.null.FF)/C.sd, colour=as.factor(z)) ) + geom_line() +
+	labs(x="Sample unit scale", y="effect size FF") + theme_bw() + scale_colour_discrete(name="  z") +ylim(-.1,.1)
+panel.2b<-ggplot(z.panel, aes(a, (C.score-C.score.null.FE)/C.sd, colour=as.factor(z)) ) + geom_line() +
+	labs(x="Sample unit scale", y="effect size FE") + theme_bw() + scale_colour_discrete(name="  z") +ylim(-.1,.1)
+panel.2c<-ggplot(z.panel, aes(a, S, colour=as.factor(z)) ) + geom_line() +
+	labs(x="Sample unit scale", y="Species richness") + theme_bw() + scale_colour_discrete(name="  z") 
+
+
+panel.2d<-ggplot(B.panel, aes(a, (C.score-C.score.null.FF)/C.sd, colour=as.factor(B)) ) + geom_line() +
+	labs(x="Sample unit scale", y="effect size FF") + theme_bw() + scale_colour_discrete(name="  B") +ylim(-.1,.1)
+panel.2e<-ggplot(B.panel, aes(a, (C.score-C.score.null.FE)/C.sd, colour=as.factor(B)) ) + geom_line() +
+	labs(x="Sample unit scale", y="effect size FE") + theme_bw() + scale_colour_discrete(name="  B")+ylim(-.1,.1)
+panel.2f<-ggplot(B.panel, aes(a, S, colour=as.factor(B)) ) + geom_line() +
+	labs(x="Sample unit scale", y="Species richness") + theme_bw() + scale_colour_discrete(name="  B") 
+
+dev.new()
+grid.arrange(panel.2a, panel.2b, panel.2c, panel.2d, panel.2e, panel.2f,  ncol=3)
+
+ 
+
+  
